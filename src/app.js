@@ -1,47 +1,43 @@
 const express = require("express");
 const app = express();
 
-// app.use("/", (req, res) => { //request handler //this code overwrites everything so any other route doesnt work
-//     res.send("server running")
+// app.get("/ab?c", (req, res) => {
+//     res.send("b is optional here")
 // })
 
-//nowif we write a use code, all methods will console log this only bcoz ORDER MATTERS
-app.use("/user", (req, res) => { 
-    res.send("all methods same response")
+// app.get("/ab+c", (req, res) => {
+//     res.send("a and c shd be at last and u can add as many bs as u want")
+// })
+
+// app.get("/ab*c", (req, res) => {
+//     res.send("starts with ab, ends with c, and in place of star anything can come")
+// })
+
+// app.get("/a(bc)?d", (req, res) => {
+//     res.send("grouping also exists, bc is optional")
+// })
+
+// app.get("/a(bc)+d", (req, res) => {
+//     res.send("grouping also exists, any amt of bc is allowed")
+// })
+
+//regex
+app.get(/a/, (req, res) => {
+    res.send("if any of my path contains a, it works")
 })
 
-//this will only handle GET call to /user
 app.get("/user", (req, res) => {
-    res.send({firstName: "Neelakshi"})
+    console.log(req.query);
+    res.send("query params")
 })
 
-//POST method
-app.post("/user", (req, res) => {
-    console.log("save data to the database")
-    res.send("data saved successfully")
+app.get("/user/:userId", (req, res) => {
+    console.log(req.params);
+    res.send("dynamic routes")
 })
-
-//DELETE method
-app.delete("/user", (req, res) => {
-    res.send("data deleted successfully")
-})
-
-//it will match all the http method API calls to /test
-app.use("/test", (req, res) => { 
-    console.log("onto")
-    res.send("onto server testing")
-})
-
-app.use("/hello", (req, res) => { 
-    res.send("hello there")
-})
-
-// app.use("/", (req, res) => { //but if this is below ie we change the order, then hello there will work and not this
-//     res.send("server running")
-// })
 
 app.listen(3000, ()=> {
     console.log("server running")
 });
 
-//ROUTES ARE ALWAYS MATCHED FROM TOP TO BOTTOM 
+
