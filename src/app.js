@@ -1,133 +1,103 @@
 const express = require("express");
 const app = express();
 
-app.use("/user", (req, res) => {
-    res.send("route handler 1")
-})
-
-app.use("/user", (req, res) => { //postman will send request but bcoz we have not defined any res it will stay hanging \
-// there,, after some time req will be timed out and nothing will be responded from the server
-// we are not handling this req 
-    //empty req handler
-})
-
-//we can have multiple request handlers
-//first arg is the route, and then followed by as many no of route handlers
-//outputs route handler 1
-//case 1
-// app.use("/user",
-//     (req, res) => {
-//     res.send("route handler 1")
-//     }, 
-//     (req, res) => {
-//         res.send("route handler 2")
-//     }
-// )
-
-//case 2 - if the first req handler doesnt have a res.send it still wont moveto the next one it would stay hanging
-// app.use("/user",
-//     (req, res) => {
-//     //no res.send found here... do u thing the next res.send will be printed? NO it wont
-//     }, 
-//     (req, res) => {
-//         res.send("route handler 2")
-//     }
-// )
-
-//case 3
-//express tells us to explicitly take the 4rd arg next and call the func next() to be able to moc=ve to the next 
-// req handler
-// app.use("/user",
+//example 1
+// app.use("/", (req, res) => {
+//     res.send("handling / router");  //prints this & END
+// })
+// app.get("/user", 
 //     (req, res, next) => {
-//     //no res from here
-//     next();
-//     }, 
-//     (req, res) => {
-//         res.send("route handler 2")
+//         next();
+//     },
+//     (req, res, next) => {
+//         next();
+//     },
+//     (req, res, next) => {
+//         res.send("handling / router 2");
 //     }
 // )
 
-//case 4
-// will send route handler 1 
-// but then since js code is synchronous and new func context ismade everytime we see a new func
-// the 2nd callback will also be executed and when we try to send res back from 2nd callback also it will give a 
-// console error (as server had alr sent res to client afer which the connection was closed, client is working fine but
-// server is again trying to send a response but is not able to find the client)
-app.use("/user",
-    (req, res, next) => {
-    res.send("route handler 1");
-    next();
-    }, 
-    (req, res) => {
-        res.send("route handler 2")
-    }
-)
+//example 2
+// app.use("/", (req, res, next) => {
+//     next();  
+// })
+// app.get("/user", 
+//     (req, res, next) => {
+//         next();
+//     },
+//     (req, res, next) => {
+//         next();
+//     },
+//     (req, res, next) => {
+//         res.send("handling / router 2"); //prints this & END
+//     }
+// )
 
-//case 5
-//outputs req handler 2 as 2nd res.send returns the response 
-// and again error from first res.send after next() finishes 
-app.use("/user",
-    (req, res, next) => {
-    next();
-    res.send("route handler 1");
-    }, 
-    (req, res) => {
-        res.send("route handler 2")
-    }
-)
+//SO EXPRESS WHEN IT GET A REQ IT KEEPS ON CHECKING THE MIDDLEWARES UNTIL IT REACHES THE RES HANDLER THAT SENDS BACK RESPONSE
+// API CALL => MIDDLEWARE CHAIN => REQ HANDLER 
 
-//case 6
-// 2nd route handler printed and no error 
-app.use("/user",
-    (req, res, next) => {
-    next();
-    }, 
-    (req, res) => {
-        res.send("route handler 2")
-    }, 
-    (req, res) => {
-        res.send("route handler 3")
-    }, 
-    (req, res) => {
-        res.send("route handler 4")
-    }, 
-)
+// WHY DO WE NEED MIDDLEWARES??
+// In this code example we have to check admin authorizaton everytime for an admin route to make sure that only the admin 
+// can get all data or delete a user 
+// app.get("/admin/getAllData", (req, res) => {
+//     //logic of checking if the request is authorised
+//     // const token = "xyzzzzzz";
+//     const token = "xyz";
+//     const isAdminAuthorised = token === "xyz";
+//     if(isAdminAuthorised){
+//         res.send("all data sent");
+//     } else{
+//         res.status(401).send("unauthorised access");
+//     }
+// })
 
-//case 7
-// error
-app.use("/user",
-    (req, res, next) => {
-        next();
-    }, 
-    (req, res, next) => {
-        next();
-    }, 
-    (req, res, next) => {
-        next();
-    }, 
-    (req, res, next) => {
-        next(); //here it expects there would be a router after this also but it couldnt find one so error
-    }, 
-)
+// app.get("/admin/deleteUser", (req, res) => {
+//     //logic of checking if the request is authorised
+//     // const token = "xyzzzzzz";
+//     const token = "xyz";
+//     const isAdminAuthorised = token === "xyz";
+//     if(isAdminAuthorised){
+//         res.send("user deleted");
+//     } else{
+//         res.status(401).send("unauthorised access");
+//     }
+// })
 
-//case 8
-// again request hanging 
-app.use("/user",
-    (req, res, next) => {
-        next();
-    }, 
-    (req, res, next) => {
-        next();
-    }, 
-    (req, res, next) => {
-        next();
-    }, 
-    (req, res, next) => {
+//HERE MIDDLEWARES ARE USEFUL 
+// now we will write handle auth middleware for all requests 
+// app.use("/admin", 
+//     //logic of checking if the request is authorised
+//     (req, res) => {
+//         // const token = "xyzzzzzz";
+//         const token = "xyz";
+//         const isAdminAuthorised = token === "xyz";
+//         if(!isAdminAuthorised){
+//             res.status(401).send("unauthorised access");
+//         } else{
+//             next();
+//         }   
+//     }
+// )   //moving all this logic to another file for clean code writing 
 
-    }, 
-)
+//clean code 
+const adminAuth = require("./middlewares/auth.js");
+app.use("/admin", adminAuth);
 
-//we can also send array of functions instead of passing many different route handlers 
+app.get("/admin/getAllData", (req, res) => {
+    res.send("sent all data")
+})
+app.get("/admin/deleteUser", (req, res) => {
+    res.send("user deleted");
+})
+
+//example 2
+const userAuth = require("./middlewares/auth.js");
+app.get("/user", userAuth, (req, res) => {
+    res.send("user has access")
+}) 
+app.get("/user/login", (req, res) => {
+    res.send("user has access")
+})
 
 app.listen(3000, ()=> {
     console.log("server running")
