@@ -1,7 +1,6 @@
 const express = require("express");
 const {connectDB} = require("./config/database");
 const {User} = require("./models/user");
-const { isValidElement } = require("react");
 
 const app = express();
 
@@ -41,8 +40,8 @@ app.patch("/user/:userId", async(req, res) => {
     const data = req.body;
     
     try{
-        const allowedUpdates = ["firstName", "lastname", "age", "gender", "skills", "about"];
-        const isAloowedUpdates = Object.keys(data).every(keyy => allowedUpdates.includes(keyy));
+        const allowedUpdates = ["firstName", "lastName", "age", "gender", "skills", "about", "password", "emailId"];
+        const isAllowedUpdates = Object.keys(data).every(keyy => allowedUpdates.includes(keyy));
         if(!isAllowedUpdates){
             throw new Error("update not allowed");
         }
@@ -55,7 +54,7 @@ app.patch("/user/:userId", async(req, res) => {
         });
         res.send("user updated successfully");
     } catch(err){
-        res.status(400).send("update has failed");
+        res.status(400).send("update has failed" + err.message);
     }
 })
 
