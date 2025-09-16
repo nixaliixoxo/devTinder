@@ -55,7 +55,7 @@ app.patch("/user/:userId", async(req, res) => {
         });
         res.send("user updated successfully");
     } catch(err){
-        res.status(400).send("update failed");
+        res.status(400).send("update has failed");
     }
 })
 
