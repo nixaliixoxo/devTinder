@@ -1,6 +1,7 @@
 const express = require("express");
 const {connectDB} = require("./config/database");
-const {User} = require("./models/user")
+const {User} = require("./models/user");
+const { isValidElement } = require("react");
 
 const app = express();
 
@@ -34,17 +35,27 @@ app.delete("/user", async(req, res) => {
 })
 
 // update data of the user
-app.patch("/user", async(req, res) => {
-    const userId = req.body.userId;
+// adding API level validations 
+app.patch("/user/:userId", async(req, res) => {
+    const userId = req.params?.userId;
     const data = req.body;
+    
     try{
+        const allowedUpdates = ["firstName", "lastname", "age", "gender", "skills", "about"];
+        const isAloowedUpdates = Object.keys(data).every(keyy => allowedUpdates.includes(keyy));
+        if(!isAllowedUpdates){
+            throw new Error("update not allowed");
+        }
+        if(data?.skills.length > 10){
+            throw new Error("skills cannot be more than 10");
+        }
         await User.findByIdAndUpdate({_id: userId}, data, {
             returnDocument: "before",
             runValidators: true
         });
         res.send("user updated successfully");
     } catch(err){
-        res.status(400).send("something went wrong");
+        res.status(400).send("update failed");
     }
 })
 
