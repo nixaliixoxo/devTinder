@@ -3,9 +3,13 @@ const {connectDB} = require("./config/database");
 const {User} = require("./models/user");
 const {validateSignUpData} = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const {userAuth} = require("./middlewares/auth");
 
 const app = express();
 
+app.use(cookieParser());
 app.use(express.json());
 
 // user signup
@@ -29,14 +33,15 @@ app.post("/signup", async(req, res)=>{
 app.post("/login", async(req, res)=>{
     try{
         const {emailId, password} = req.body;
-
+    
         const user = await User.findOne({emailId: emailId});
         if(!user){
             throw new Error("invalid credentials");
         }
-
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if(isPasswordValid){
+            const token = await jwt.sign({_id : user._id}, "DEV@tinder$11");
+            res.cookie("token", token);
             res.send("login successful");
         } else {
             res.send("invalid credentials");
@@ -46,8 +51,26 @@ app.post("/login", async(req, res)=>{
     }
 })
 
+// user profile
+app.post("/profile", async(req, res)=>{
+    try{
+        const cookies = req.cookies;
+        const {token} = cookies;
+        const decodedMsg = await jwt.verify(token, "DEV@tinder$11");
+        const {_id} = decodedMsg;
+        const user = await User.findOne({_id: _id});
+        if(!user){
+            res.send("user not found");
+        } else{
+            res.send(user);
+        }
+    } catch(err){
+        res.send("ERROR" + err.message);
+    }
+})
+
 // get user by id - Model.findById
-app.get("/user/:id", async(req, res) => {
+app.get("/user/:id", userAuth, async(req, res) => {
     const userId = req.params.id;
     try{
         const user = await User.findById(userId);
@@ -62,7 +85,7 @@ app.get("/user/:id", async(req, res) => {
 })
 
 // delete api to delete a user using Model.findByIdandDelete
-app.delete("/user", async(req, res) => {
+app.delete("/user", userAuth, async(req, res) => {
     const userId = req.body.userId;
     try{
         //const user = await User.findById({_id : userId});
@@ -75,7 +98,7 @@ app.delete("/user", async(req, res) => {
 
 // update data of the user
 // adding API level validations 
-app.patch("/user/:userId", async(req, res) => {
+app.patch("/user/:userId", userAuth, async(req, res) => {
     const userId = req.params?.userId;
     const data = req.body;
     
