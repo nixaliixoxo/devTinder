@@ -14,6 +14,7 @@ const userAuth = async (req, res, next) => {
         if(!user){
             throw new Error("user not found");
         } else{
+            req.user = user;
             next();
         }
     } catch(err){
@@ -24,3 +25,4 @@ const userAuth = async (req, res, next) => {
 module.exports = {
     userAuth
 }
+
