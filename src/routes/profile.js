@@ -40,4 +40,21 @@ profileRouter.patch("/profile/edit", userAuth, async(req, res)=>{
     }
 })
 
+profileRouter.patch("/profile/password", userAuth, async(req, res)=>{
+    //validate my profile edit data
+    try{
+        if(!validateEditProfile(req)){
+            throw new Error("invalid edit request");
+        }
+        const loggedInUser = req.user;
+        // validate what the user has sent & then proceed with below
+        Object.keys(req.body).forEach(field => loggedInUser[field] = req.body[field]);
+        await loggedInUser.save();
+        res.send("profile updated successfully" + loggedInUser);
+    }
+    catch(err){
+        res.send("cant update profile" + err.message);
+    }
+})
+
 module.exports = profileRouter;
