@@ -55,14 +55,19 @@ userRouter.get("/user/connections", userAuth, async(req, res) => {
     }
 })
 
-userRouter.get("/user/feed", userAuth, async(req,res)=>{
+userRouter.get("/user/feed?page=1&limit=10", userAuth, async(req,res)=>{
     // user should see all the user cards except 
     // 1. his own card
     // 2, his connections
     // 3. ignored people
     // 4. already sent connection request
     try{
-        loggedInUser = req.user;
+        const loggedInUser = req.user;
+
+        const page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10; 
+        limit = limit > 50? 50 : limit;
+        const skip = (page-1)*limit;
 
         //finding all the connection requests that either ive sent or received 
         const allConnectionRequests = await connectionRequest.find({
@@ -70,7 +75,7 @@ userRouter.get("/user/feed", userAuth, async(req,res)=>{
                 {toUserId: loggedInUser._id},
                 {fromUserId: loggedInUser._id}
             ]
-        }).select("fromUserId toUserId");
+        }).select("fromUserId toUserId").skip(skip).limit(limit);
         // .populate("fromUserId", "firstName lastName").populate("toUserId", "firstName lastName");
 
         const hideUsersFromFeed = new Set();
