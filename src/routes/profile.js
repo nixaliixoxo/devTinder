@@ -19,42 +19,37 @@ profileRouter.get("/profile/view", userAuth, async(req, res)=>{
             res.send(user);
         }
     } catch(err){
-        res.send("ERROR" + err.message);
+        res.status(400).json({ error: err.message });
     }
 })
 
-profileRouter.patch("/profile/edit", userAuth, async(req, res)=>{
-    //validate my profile edit data
-    try{
-        if(!validateEditProfile(req)){
-            throw new Error("invalid edit request");
-        }
-        const loggedInUser = req.user;
-        // validate what the user has sent & then proceed with below
-        Object.keys(req.body).forEach(field => loggedInUser[field] = req.body[field]);
-        await loggedInUser.save();
-        res.send("profile updated successfully" + loggedInUser);
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
+  try {
+    if (!validateEditProfile(req)) {
+      throw new Error("Invalid edit request");
     }
-    catch(err){
-        res.send("cant update profile" + err.message);
-    }
-})
 
-profileRouter.patch("/profile/password", userAuth, async(req, res)=>{
-    //validate my profile edit data
-    try{
-        if(!validateEditProfile(req)){
-            throw new Error("invalid edit request");
-        }
-        const loggedInUser = req.user;
-        // validate what the user has sent & then proceed with below
-        Object.keys(req.body).forEach(field => loggedInUser[field] = req.body[field]);
-        await loggedInUser.save();
-        res.send("profile updated successfully" + loggedInUser);
+    const loggedInUser = req.user;
+    const allowedGenders = ["male", "female", "others"];
+
+    if (req.body.gender && !allowedGenders.includes(req.body.gender.toLowerCase())) {
+      return res.status(400).json({
+        error: "Invalid gender value",
+      });
     }
-    catch(err){
-        res.send("cant update profile" + err.message);
-    }
-})
+
+    Object.keys(req.body).forEach((field) => {
+      loggedInUser[field] = req.body[field];
+    });
+
+    await loggedInUser.save();
+    res.send({ message: "Profile updated successfully", user: loggedInUser });
+  } catch (err) {
+    res.status(400).json({
+      error: "ERROR: " + err.message,
+    });
+  }
+});
+
 
 module.exports = profileRouter;

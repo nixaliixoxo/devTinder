@@ -37,18 +37,27 @@ authRouter.post("/login", async(req, res)=>{
             res.cookie("token", token);
             res.send(user);
         } else {
-            res.send("invalid credentials");
+            throw new Error("invalid credentials");
         }
     } catch(err){
-        res.send("ERROR" + err.message);
+        res.status(401).send("ERROR" + err.message);
+        console.log(err.message);
     }
 })
 
 authRouter.post("/logout", async(req, res) =>{
-    res.cookie("token", null, {
-        expires: new Date(Date.now())
-    });
-    res.send("logged out");
+    try{
+        res.cookie("token", null, {
+            expires: new Date(Date.now())
+        });
+        res.json({
+            message: "logged out"
+        });
+    } catch(err){
+        res.status(400).json({
+            error: "ERROR: " + err.message
+        })
+    }
 })
 
 module.exports = authRouter;
