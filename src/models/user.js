@@ -47,6 +47,9 @@ const userSchema = new mongoose.Schema({
     about: {
         type: String,
         default: "this is a default about of the user"
+    },
+    photoURL: {
+        type: "string",
     }
 },
 {

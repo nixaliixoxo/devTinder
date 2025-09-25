@@ -12,7 +12,7 @@ userRouter.get("/user/pendingrequests", userAuth, async(req, res) => {
         const allConnectionRequests = await connectionRequest.find({
             toUserId: loggedInUser._id,
             status: "interested", 
-        }).populate("fromUserId", ["firstName", "lastName"]); 
+        }).populate("fromUserId", ["firstName", "lastName", "about", "photoURL"]); 
         // .populate("fromUserId"); 
         // .populate("fromUserId", ["firstName lastName"]); 
         res.json({
@@ -34,8 +34,8 @@ userRouter.get("/user/connections", userAuth, async(req, res) => {
                 {fromUserId: loggedInUser._id, status: "accepted"}
             ]
         })
-        .populate("fromUserId", "firstName lastName")
-        .populate("toUserId", "firstName lastName"); 
+        .populate("fromUserId", "firstName lastName about photoURL")
+        .populate("toUserId", "firstName lastName about photoURL"); 
 
         const data = allConnections.map((obj) => {
             if(obj.fromUserId._id.toString() === loggedInUser._id.toString()){
@@ -92,7 +92,7 @@ userRouter.get("/user/feed", userAuth, async(req,res)=>{
                 {_id : {$ne : loggedInUser._id }}
             ]
         })
-        .select("firstName lastName")
+        .select("firstName lastName about photoURL")
         .skip(skip)
         .limit(limit);
 

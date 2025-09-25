@@ -8,20 +8,24 @@ const cookieParser = require("cookie-parser");
 const authRouter = express.Router();
 
 authRouter.post("/signup", async (req, res) => {
-    try{
-        validateSignUpData(req);
+  try {
+    validateSignUpData(req);
 
-        const {firstName, lastName, emailId, password} = req.body;
+    const { firstName, lastName, emailId, password } = req.body;
 
-        const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
-        const user = new User({firstName, lastName, emailId, password: passwordHash});
-        await user.save();
-        res.send("user added successfully");
-    } catch(err){
-        res.send("ERROR" + err.message);
-    }
-})
+    const user = new User({ firstName, lastName, emailId, password: passwordHash });
+    const savedUser = await user.save();
+
+    const token = jwt.sign({ _id: user._id }, "DEV@tinder$11");
+    res.cookie("token", token);
+    res.status(201).json(savedUser);  
+  } catch (err) {
+    res.status(400).json({ message: err.message });  
+  }
+});
+
 
 authRouter.post("/login", async(req, res)=>{
     try{

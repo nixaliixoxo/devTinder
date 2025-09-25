@@ -11,9 +11,9 @@ connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async(
         const toUserId = req.params.toUserId;
         const status = req.params.status;
 
-        // if(fromUserId === toUserId){
-        //     return res.status(400).send({message: "cant send request to yourself"}) 
-        // }
+        if(fromUserId === toUserId){
+            return res.status(400).send({message: "cant send request to yourself"}) 
+        }
 
         const allowedStatus = ["ignored", "interested"];
 
@@ -34,8 +34,8 @@ connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async(
         })
 
         if(existingConnectionRequest){
-            res.status(400).json({
-                message: "cpnnection request already exists"
+            return res.status(400).json({
+                message: "connection request already exists"
             })
         }
 
@@ -46,14 +46,13 @@ connectionRequestRouter.post("/request/send/:status/:toUserId", userAuth, async(
         });
 
         const data = await newconnectionRequest.save();
-
         res.json({
             message: "connection request sent successfully",
             data,
         }); 
     }
     catch(err){
-        res.send("ERROR" + err.message); 
+        res.status(400).json({error: "ERROR: " + err.message });
     }
 });
 
